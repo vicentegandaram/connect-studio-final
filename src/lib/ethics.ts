@@ -1,0 +1,131 @@
+import type { Fields, FormatDef, Post } from "../types/studio";
+import { FORMAT_BY_ID } from "../data/formats";
+
+export type Severity = "error" | "warning";
+export interface EthicsIssue {
+  severity: Severity;
+  where: string;
+  excerpt: string;
+  message: string;
+}
+export interface EthicsPass {
+  id: string;
+  label: string;
+}
+export interface EthicsReport {
+  issues: EthicsIssue[];
+  passed: EthicsPass[];
+}
+
+interface Rule {
+  id: string;
+  passLabel: string;
+  re: RegExp;
+  severity: Severity;
+  message: string;
+}
+
+// Heurísticas editoriales: no son asesoría legal ni reemplazan el código de ética del Colegio de Psicólogos.
+const RULES: Rule[] = [
+  {
+    id: "no-diagnostica",
+    passLabel: "No diagnostica: habla de experiencias comunes, no de trastornos.",
+    re: /\b(tienes|padeces|sufres de|eres)\s+(un[a]?\s+)?(depresi[oó]n|ansiedad|trastorno|bipolar|tdah|toc|tept|autis\w*|borderline)/i,
+    severity: "error",
+    message: "Parece un diagnóstico directo. Usa lenguaje psicoeducativo («puede ser señal de…»).",
+  },
+  {
+    id: "no-promete",
+    passLabel: "No promete curas ni resultados.",
+    re: /\b(te vas a curar|cura|curar\w*|sanar\w*|garantiz\w+|100\s?%|resultados?\s+(asegurad|garantizad)\w*|para siempre)\b/i,
+    severity: "error",
+    message: "Promete curas o resultados. No se puede garantizar un resultado terapéutico.",
+  },
+  {
+    id: "no-reemplaza",
+    passLabel: "No sugiere reemplazar la atención profesional.",
+    re: /(no necesitas\s+(un[a]?\s+)?(psic\w+|terapia)|en vez de ir al psic\w+|en lugar de (ir a )?terapia)/i,
+    severity: "error",
+    message: "Sugiere reemplazar la atención profesional.",
+  },
+  {
+    id: "no-testimonios",
+    passLabel: "No usa testimonios ni casos de pacientes.",
+    re: /\b(mi paciente|mis pacientes|testimonios?|caso real|me (dijo|dijeron) (un|una) paciente)\b/i,
+    severity: "error",
+    message: "Menciona pacientes o testimonios: riesgo de confidencialidad y publicidad indebida.",
+  },
+  {
+    id: "no-presion",
+    passLabel: "Sin urgencia ni descuentos agresivos.",
+    re: /(\b(urgente|[uú]ltim[oa]s?\s+cupos?|solo hoy|no esperes m[aá]s|oferta|promo\w*)\b|\d+\s?%\s?(dcto|descuento|off))/i,
+    severity: "warning",
+    message: "Tono comercial o de urgencia. Para servicios de salud mental, mejor informar y dejar decidir.",
+  },
+  {
+    id: "no-fisiologia",
+    passLabel: "Sin afirmaciones fisiológicas sin respaldo.",
+    re: /(nervio vago|reprogram\w+\s+(tu\s+)?cerebro|cortisol|qu[ií]mica cerebral)/i,
+    severity: "warning",
+    message: "Afirmación fisiológica: cítala con fuente o evítala.",
+  },
+];
+
+const CRISIS_RE = /(suicid\w*|autolesi\w*|quitarme la vida|quitarte la vida)/i;
+
+function fieldLabels(def: FormatDef): Record<string, string> {
+  return Object.fromEntries(def.fields.map((f) => [f.key, f.label]));
+}
+
+/** Junta todo el texto visible del post: campos y capas de texto. */
+export function postTexts(post: Post): Record<string, string> {
+  const def = FORMAT_BY_ID[post.format];
+  const labels = fieldLabels(def);
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(post.fields)) out[labels[k] ?? k] = v;
+  if (post.caption) out["Descripción de Instagram"] = post.caption;
+  post.extras.forEach((ex, i) =>
+    ex.layers.forEach((l, j) => {
+      if (l.type === "text") out[`Capa de texto ${i + 1}.${j + 1}`] = l.text;
+    }),
+  );
+  return out;
+}
+
+export function reviewTexts(texts: Record<string, string>): EthicsReport {
+  const issues: EthicsIssue[] = [];
+  const failed = new Set<string>();
+  for (const [where, text] of Object.entries(texts)) {
+    for (const rule of RULES) {
+      const m = text.match(rule.re);
+      if (m) {
+        issues.push({ severity: rule.severity, where, excerpt: m[0], message: rule.message });
+        failed.add(rule.id);
+      }
+    }
+  }
+  const all = Object.values(texts).join(" ");
+  if (CRISIS_RE.test(all) && !/4141/.test(all)) {
+    issues.push({
+      severity: "error",
+      where: "Contenido",
+      excerpt: all.match(CRISIS_RE)?.[0] ?? "",
+      message: "Menciona crisis o autolesión: incluye una línea de ayuda (ej. *4141 del Minsal) y evita detalles.",
+    });
+    failed.add("crisis");
+  }
+  const passed = RULES.filter((r) => !failed.has(r.id)).map((r) => ({ id: r.id, label: r.passLabel }));
+  return { issues, passed };
+}
+
+export function reviewPost(post: Post): EthicsReport {
+  return reviewTexts(postTexts(post));
+}
+
+export function hasBlocking(report: EthicsReport): boolean {
+  return report.issues.some((i) => i.severity === "error");
+}
+
+export function fieldsToText(fields: Fields): string {
+  return Object.values(fields).join("\n");
+}
