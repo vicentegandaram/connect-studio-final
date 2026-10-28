@@ -1,5 +1,5 @@
-import type { FeedCategory, Post } from "../types/studio";
-import { FORMAT_BY_ID } from "../data/formats";
+import type { FeedCategory, FormatId, Post } from "../types/studio";
+import { FORMAT_BY_ID, FORMATS } from "../data/formats";
 
 export interface HarmonyIssue {
   severity: "error" | "warning";
@@ -82,4 +82,14 @@ export function analyzeFeed(posts: Post[]): HarmonyReport {
     .sort((a, b) => counts[a] / IDEAL[a] - counts[b] / IDEAL[b])[0] ?? "educativo";
 
   return { score, issues, counts, next };
+}
+
+/** Formato que más equilibra el feed: el menos usado dentro de la categoría que toca. */
+export function recommendFormat(posts: Post[]): { format: FormatId; report: HarmonyReport } {
+  const report = analyzeFeed(posts);
+  const grid = posts.slice(0, 9);
+  const best = FORMATS.filter((f) => f.category === report.next)
+    .map((f) => ({ id: f.id, n: grid.filter((p) => p.format === f.id).length }))
+    .sort((a, b) => a.n - b.n)[0];
+  return { format: best?.id ?? "frase-validacion", report };
 }

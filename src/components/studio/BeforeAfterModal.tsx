@@ -38,21 +38,21 @@ export function BeforeAfterModal({ studio, onClose }: { studio: Studio; onClose:
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="fade-up max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-slate-700 bg-slate-900 p-6 md:p-8" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="float-right rounded-full bg-slate-800 p-2 text-slate-400 hover:text-white"><X size={16} /></button>
-        <p className="text-center text-xs font-semibold uppercase tracking-wider text-amber-300">La promesa de valor</p>
-        <h2 className="mt-1 text-center text-2xl font-bold text-white">Del feed caótico al feed que inspira confianza</h2>
-        <p className="mx-auto mt-2 max-w-lg text-center text-sm text-slate-400">Sin lienzo en blanco: kit cerrado, formatos clínicos y revisión ética. Ejemplo ilustrativo con tu marca actual ({kit.name}).</p>
+      <div className="fade-up max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-slate-300 bg-white p-6 md:p-8" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="float-right rounded-full bg-slate-100 p-2 text-slate-500 hover:text-slate-900"><X size={16} /></button>
+        <p className="text-center text-xs font-semibold uppercase tracking-wider text-amber-800">La promesa de valor</p>
+        <h2 className="mt-1 text-center text-2xl font-bold text-slate-900">Del feed caótico al feed que inspira confianza</h2>
+        <p className="mx-auto mt-2 max-w-lg text-center text-sm text-slate-500">Sin lienzo en blanco: kit cerrado, formatos clínicos y revisión ética. Ejemplo ilustrativo con tu marca actual ({kit.name}).</p>
 
         <div className="my-6 flex items-center justify-center gap-4">
-          <div className={`flex items-center gap-2 text-sm font-semibold transition ${after ? "text-slate-600" : "text-rose-300"}`}><Frown size={30} /> Antes</div>
+          <div className={`flex items-center gap-2 text-sm font-semibold transition ${after ? "text-slate-400" : "text-rose-600"}`}><Frown size={30} /> Antes</div>
           <button onClick={() => setAfter(!after)} role="switch" aria-checked={after} className={`relative h-9 w-20 rounded-full transition ${after ? "bg-emerald-500" : "bg-rose-600"}`}>
             <span className={`absolute top-1 h-7 w-7 rounded-full bg-white shadow transition-all ${after ? "left-12" : "left-1"}`} />
           </button>
-          <div className={`flex items-center gap-2 text-sm font-semibold transition ${after ? "text-emerald-300" : "text-slate-600"}`}>Después <Smile size={30} /></div>
+          <div className={`flex items-center gap-2 text-sm font-semibold transition ${after ? "text-emerald-800" : "text-slate-400"}`}>Después <Smile size={30} /></div>
         </div>
 
-        <div className={`mx-auto grid max-w-md grid-cols-3 gap-1.5 rounded-2xl border p-2 transition-colors ${after ? "border-emerald-500/40 bg-slate-950" : "border-rose-500/40 bg-slate-950"}`}>
+        <div className={`mx-auto grid max-w-md grid-cols-3 gap-1.5 rounded-2xl border p-2 transition-colors ${after ? "border-emerald-500/40 bg-slate-50" : "border-rose-200 bg-slate-50"}`}>
           {demo.map((post, i) => {
             const c = CHAOS[i]!;
             return (
@@ -68,14 +68,14 @@ export function BeforeAfterModal({ studio, onClose }: { studio: Studio; onClose:
 
         <dl className="mx-auto mt-5 grid max-w-md grid-cols-2 gap-2 text-xs">
           {metrics.map(([k, v]) => (
-            <div key={k} className={`rounded-xl border px-3 py-2 ${after ? "border-emerald-500/30 bg-emerald-950/20" : "border-rose-500/30 bg-rose-950/20"}`}>
+            <div key={k} className={`rounded-xl border px-3 py-2 ${after ? "border-emerald-200 bg-emerald-50" : "border-rose-500/30 bg-rose-950/20"}`}>
               <dt className="text-[10px] uppercase tracking-wide text-slate-500">{k}</dt>
-              <dd className={after ? "text-emerald-200" : "text-rose-200"}>{v}</dd>
+              <dd className={after ? "text-emerald-800" : "text-rose-700"}>{v}</dd>
             </div>
           ))}
         </dl>
         <div className="mt-6 flex justify-center">
-          <button onClick={onClose} className="rounded-xl bg-sky-600 px-6 py-2.5 text-xs font-semibold text-white hover:bg-sky-500">Volver al estudio</button>
+          <button onClick={onClose} className="rounded-xl bg-brand px-6 py-2.5 text-xs font-semibold text-white hover:bg-blue-700">Volver al estudio</button>
         </div>
       </div>
     </div>

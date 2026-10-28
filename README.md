@@ -20,3 +20,7 @@ Une dos prototipos propios sin modificarlos:
 - Los datos viven en `localStorage` (`connect-studio-final-v1`); hereda `connect-studio-v1` si existe. No se migran los datos de `spotli-connect` (otro modelo).
 
 Respaldos: etiqueta `backup-pre-merge` en `connect-studio` (`vicentegandaram/connect-clinical-studio`) y en `spotli-connect` (`vicentegandaram/connect-studio`).
+
+### v2: UI de spotli-connect
+
+La interfaz es la de `spotli-connect` (sidebar claro, Inicio / Calendario / Crear en 2 pasos / Mis posts / Brand DNA). Todo el motor de Connect Studio vive dentro: kits con contraste AA, editor de capas, ética que bloquea el export, Feed Harmonizer 3×3, teleprompter y Antes vs. Después. La versión anterior (UI oscura) queda en la etiqueta `v1-ui-oscura`.

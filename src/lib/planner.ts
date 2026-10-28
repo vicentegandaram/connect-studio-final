@@ -2,10 +2,10 @@ import type { Approach, ClinicalDNA, Fields, FormatId, Pillar, Post } from "../t
 import { FORMAT_BY_ID, fillVariant } from "../data/formats";
 import { cleanTopic } from "../data/formats-extra";
 
-export const PILLARS: Record<Pillar, { label: string; chip: string }> = {
-  psicoeducacion: { label: "Psicoeducación", chip: "bg-sky-500/15 text-sky-300" },
-  desmitificacion: { label: "Desmitificación", chip: "bg-amber-500/15 text-amber-300" },
-  sintomas: { label: "Señales y síntomas", chip: "bg-violet-500/15 text-violet-300" },
+export const PILLARS: Record<Pillar, { label: string; color: string }> = {
+  psicoeducacion: { label: "Psicoeducación", color: "#2E86DE" },
+  desmitificacion: { label: "Desmitificación", color: "#D08A45" },
+  sintomas: { label: "Señales y síntomas", color: "#7A63D1" },
 };
 
 export interface PlanIdea {

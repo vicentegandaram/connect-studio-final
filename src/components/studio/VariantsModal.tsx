@@ -34,16 +34,16 @@ export function VariantsModal({ studio, onClose }: { studio: Studio; onClose: ()
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="fade-up max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-slate-700 bg-slate-900 p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="fade-up max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-slate-300 bg-white p-6" onClick={(e) => e.stopPropagation()}>
         <div className="mb-1 flex items-start justify-between">
           <div>
-            <h2 className="flex items-center gap-2 text-lg font-bold text-white"><Sparkles size={18} className="text-amber-300" /> IA clínica · {def.title}</h2>
-            <p className="mt-1 text-xs text-slate-400">Voz del kit «{kit.name}»: {kit.voice_prompt}</p>
+            <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Sparkles size={18} className="text-amber-800" /> IA clínica · {def.title}</h2>
+            <p className="mt-1 text-xs text-slate-500">Voz del kit «{kit.name}»: {kit.voice_prompt}</p>
           </div>
-          <button onClick={onClose} className="rounded-full bg-slate-800 p-2 text-slate-400 hover:text-white"><X size={16} /></button>
+          <button onClick={onClose} className="rounded-full bg-slate-100 p-2 text-slate-500 hover:text-slate-900"><X size={16} /></button>
         </div>
         {!result ? (
-          <p className="flex items-center gap-2 py-10 text-sm text-slate-400"><Loader2 size={16} className="animate-spin" /> Escribiendo variantes…</p>
+          <p className="flex items-center gap-2 py-10 text-sm text-slate-500"><Loader2 size={16} className="animate-spin" /> Escribiendo variantes…</p>
         ) : (
           <>
             <p className="mb-3 mt-4 text-[11px] text-slate-500">
@@ -51,15 +51,15 @@ export function VariantsModal({ studio, onClose }: { studio: Studio; onClose: ()
             </p>
             <div className="space-y-3">
               {result.variants.map((v, i) => (
-                <div key={i} className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                <div key={i} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <dl className="space-y-1.5 text-xs">
-                    {def.fields.map((f) => (v[f.key] ? <div key={f.key}><dt className="text-[10px] uppercase tracking-wide text-slate-500">{f.label}</dt><dd className="text-slate-200">{v[f.key]}</dd></div> : null))}
+                    {def.fields.map((f) => (v[f.key] ? <div key={f.key}><dt className="text-[10px] uppercase tracking-wide text-slate-500">{f.label}</dt><dd className="text-slate-800">{v[f.key]}</dd></div> : null))}
                   </dl>
-                  <button onClick={() => use(v)} className="mt-3 rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-500">Usar esta variante</button>
+                  <button onClick={() => use(v)} className="mt-3 rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">Usar esta variante</button>
                 </div>
               ))}
             </div>
-            <button onClick={() => setRound((r) => r + 1)} className="mt-4 text-xs text-sky-400 hover:text-sky-300">Generar otras</button>
+            <button onClick={() => setRound((r) => r + 1)} className="mt-4 text-xs text-blue-700 hover:text-blue-900">Generar otras</button>
           </>
         )}
       </div>
