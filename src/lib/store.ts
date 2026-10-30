@@ -3,6 +3,11 @@ import type { ClinicalDNA, Dimensions, Fields, FormatId, KitId, Layer, Pillar, P
 import { FORMAT_BY_ID, FORMATS, fillVariant } from "../data/formats";
 import { KIT_BY_ID, recommendKit } from "../data/kits";
 import { invalidateApproval, moveTo } from "./workflow";
+import { localRepo, type StudioRepo, type StudioState } from "./repo";
+
+/** Cambiar aquí el adaptador (p. ej. Supabase) es lo único necesario para guardar en otra parte. */
+let repo: StudioRepo = localRepo;
+export const setRepo = (r: StudioRepo): void => { repo = r; };
 import type { EthicsReport } from "./ethics";
 export type { Pillar, PostStatus };
 
@@ -23,19 +28,7 @@ export const DEFAULT_DNA: ClinicalDNA = {
   tone: "calido",
 };
 
-interface StudioState {
-  dna: ClinicalDNA;
-  kit_id: KitId;
-  posts: Post[];
-  activeId: string;
-  slide: number;
-  /** Semana del plan (cambia las ideas al pedir «otra semana»). */
-  planRound: number;
-}
 
-const KEY = "connect-studio-final-v1";
-/** Clave del prototipo anterior: si existe, se hereda para no perder lo que ya estaba guardado. */
-const LEGACY_KEY = "connect-studio-v1";
 let seq = 0;
 export const uid = (): string => `${Date.now().toString(36)}${(seq++).toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
@@ -64,28 +57,15 @@ function initial(): StudioState {
 }
 
 function load(): StudioState {
-  try {
-    const raw = localStorage.getItem(KEY) ?? localStorage.getItem(LEGACY_KEY);
-    if (raw) {
-      const s = JSON.parse(raw) as StudioState;
-      if (s.posts?.length && s.posts.some((p) => p.id === s.activeId) && KIT_BY_ID[s.kit_id]) return { ...s, planRound: s.planRound ?? 0 };
-    }
-  } catch {
-    /* almacenamiento no disponible o JSON corrupto: se parte desde la demo */
-  }
+  const s = repo.load();
+  if (s && s.posts?.length && s.posts.some((p) => p.id === s.activeId) && KIT_BY_ID[s.kit_id]) return { ...s, planRound: s.planRound ?? 0 };
   return initial();
 }
 
 export function useStudio() {
   const [state, setState] = useState<StudioState>(load);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(KEY, JSON.stringify(state));
-    } catch {
-      /* cuota llena (p. ej. fotos grandes): se sigue en memoria */
-    }
-  }, [state]);
+  useEffect(() => repo.save(state), [state]);
 
   const active = useMemo(() => state.posts.find((p) => p.id === state.activeId) ?? state.posts[0]!, [state.posts, state.activeId]);
 

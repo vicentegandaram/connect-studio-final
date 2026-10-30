@@ -24,3 +24,12 @@ Respaldos: etiqueta `backup-pre-merge` en `connect-studio` (`vicentegandaram/con
 ### v2: UI de spotli-connect
 
 La interfaz es la de `spotli-connect` (sidebar claro, Inicio / Calendario / Crear en 2 pasos / Mis posts / Brand DNA). Todo el motor de Connect Studio vive dentro: kits con contraste AA, editor de capas, ética que bloquea el export, Feed Harmonizer 3×3, teleprompter y Antes vs. Después. La versión anterior (UI oscura) queda en la etiqueta `v1-ui-oscura`.
+
+### v3: módulo de Contenido unificable
+- **Paquete de 2 semanas** (asistente de 5 preguntas, inspirado en Spotli): crea todas las piezas en borrador.
+- **Aprobación**: vista para que el psicólogo revise y apruebe; reporte con supuestos visibles.
+- **Link de reserva con seguimiento** por pieza (`src`/`utm`), listo para medir con la agenda.
+- **Análisis real de la web** (`api/brand.ts`, con protección SSRF) que propone DNA y el kit más cercano por colores.
+- **Ética ampliada** (46 casos): promesas de captación, fármacos, evidencia sin fuente y comparaciones.
+- **Esquema Supabase probado** y guía de unión: `docs/PORTAR_A_CONNECTV5.md`.
+- Pruebas: `npm run evals`.

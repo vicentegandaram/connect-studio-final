@@ -1,5 +1,5 @@
 import { lookup } from "node:dns/promises";
-import { isPrivateAddress, normalizeUrl, parseSite } from "./_lib/brandParse";
+import { isPrivateAddress, normalizeUrl, parseSite } from "./_lib/brandParse.js";
 
 // Función de servidor (Vercel). Lee SOLO la portada pública de una web para proponer el Clinical DNA.
 // Protecciones: solo http/https a puertos 80/443, sin IPs literales, resolución DNS comprobada contra
