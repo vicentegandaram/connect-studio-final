@@ -7,13 +7,15 @@ import { FORMAT_BY_ID } from "../../data/formats";
 import { analyzeFeed } from "../../lib/harmony";
 import { buildPlan, fieldsForTopic, nextWeekday, PILLARS, type PlanIdea } from "../../lib/planner";
 import { BeforeAfterModal } from "../studio/BeforeAfterModal";
+import { PackageWizard } from "./PackageWizard";
 import { Btn, Card, Chip, FitThumb } from "./ui";
 
 const OBJECTIVE: Record<Pillar, string> = { psicoeducacion: "Educar", desmitificacion: "Desmitificar", sintomas: "Dar señales" };
 
-export function HomeView({ studio, onOpen }: { studio: Studio; onOpen: () => void }) {
+export function HomeView({ studio, onOpen, onPackage }: { studio: Studio; onOpen: () => void; onPackage: () => void }) {
   const { state } = studio;
   const [beforeAfter, setBeforeAfter] = useState(false);
+  const [wizard, setWizard] = useState(false);
   const plan = useMemo(() => buildPlan(state.planRound), [state.planRound]);
   const today = plan[(new Date().getDay() + 6) % 7]!;
   const made = (i: PlanIdea) => state.posts.find((p) => p.planId === i.id);
@@ -30,7 +32,10 @@ export function HomeView({ studio, onOpen }: { studio: Studio; onOpen: () => voi
     <div className="fade-up">
       <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-extrabold md:text-3xl">Hola, {first} 👋</h1>
-        <Btn variant="ghost" onClick={() => setBeforeAfter(true)}><Wand2 size={15} />Ver antes vs. después</Btn>
+        <div className="flex gap-2">
+          <Btn variant="ghost" onClick={() => setBeforeAfter(true)}><Wand2 size={15} />Ver antes vs. después</Btn>
+          <Btn onClick={() => setWizard(true)}><Sparkles size={15} />Armar mi paquete de 2 semanas</Btn>
+        </div>
       </div>
       <p className="mb-6 text-sm text-slate-500">
         Tu semana de contenido ya está pensada: {state.posts.length} publicaciones creadas, {state.posts.filter((p) => p.status === "publicado").length} publicadas. Armonía del feed: <b className={feed.score >= 80 ? "text-emerald-700" : feed.score >= 55 ? "text-amber-700" : "text-rose-600"}>{feed.score}/100</b>.
@@ -68,6 +73,7 @@ export function HomeView({ studio, onOpen }: { studio: Studio; onOpen: () => voi
         </div>
       </div>
       {beforeAfter ? <BeforeAfterModal studio={studio} onClose={() => setBeforeAfter(false)} /> : null}
+      {wizard ? <PackageWizard studio={studio} onClose={() => setWizard(false)} onDone={() => { setWizard(false); onPackage(); }} /> : null}
     </div>
   );
 }

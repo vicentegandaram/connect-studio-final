@@ -9,6 +9,7 @@ import { Thumb } from "./SlideSurface";
 import { generateCaption } from "../../lib/copy";
 import type { PostStatus } from "../../types/studio";
 import { canMove, STATUS_LABEL } from "../../lib/workflow";
+import { trackedLink, withLink } from "../../lib/links";
 
 type Tab = "contenido" | "etica";
 
@@ -95,6 +96,15 @@ function ContentForm({ studio, report, onAI, onTeleprompter }: { studio: Studio;
             <span>{capSource === "local" ? "Texto base (sin IA configurada). " : capSource === "ia" ? "Generado con IA; revísalo. " : ""}Se revisa en la pestaña Ética.</span>
             <button disabled={!active.caption} onClick={() => void navigator.clipboard.writeText(active.caption ?? "")} className="flex items-center gap-1 hover:text-slate-700 disabled:opacity-30"><ClipboardCopy size={11} /> Copiar</button>
           </div>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-slate-700">Link de reserva con seguimiento</label>
+          <div className="flex gap-1.5">
+            <input readOnly value={trackedLink(studio.state.dna, active)} className="min-w-0 flex-1 truncate rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] text-slate-600" />
+            <button onClick={() => void navigator.clipboard.writeText(trackedLink(studio.state.dna, active))} className="shrink-0 rounded-lg border border-slate-200 px-2 text-[11px] text-slate-700 hover:bg-slate-100">Copiar</button>
+          </div>
+          <button onClick={() => studio.patchActive({ caption: withLink(active.caption ?? "", trackedLink(studio.state.dna, active)) })} className="mt-1 text-[11px] text-blue-700 hover:text-blue-900">Insertar en la descripción</button>
+          <p className="mt-0.5 text-[10px] text-slate-500">Cada pieza lleva su propio origen (<code>src</code>) para saber cuántas reservas trae. Se activa al unir con la agenda.</p>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div>

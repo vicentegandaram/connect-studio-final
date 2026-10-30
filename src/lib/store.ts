@@ -122,6 +122,8 @@ export function useStudio() {
       if (res.gate.ok) patchPost(id, () => res.post);
       return res.gate.ok ? null : res.gate.reason ?? "No permitido.";
     },
+    /** Agrega varias piezas de una vez (paquete de 2 semanas); la primera queda activa. */
+    addMany: (posts: Post[]) => setState((s) => (posts.length ? { ...s, posts: [...posts, ...s.posts], activeId: posts[0]!.id, slide: 0, planRound: s.planRound + 2 } : s)),
     nextRound: () => setState((s) => ({ ...s, planRound: s.planRound + 1 })),
     duplicate: () => setState((s) => {
       const copy: Post = { ...structuredClone(active), id: uid() };

@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "check:kits": "node scripts/check-kits.mjs",
-    "evals": "tsx evals/run.ts && tsx evals/workflow-test.ts"
+    "evals": "tsx evals/run.ts && tsx evals/workflow-test.ts && tsx evals/brand-test.ts && tsx evals/package-test.ts"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.2.0",

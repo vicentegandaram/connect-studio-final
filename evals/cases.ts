@@ -49,6 +49,20 @@ export const CASES: EvalCase[] = [
   { id: "cr-sin-linea", text: "Hablemos de cómo el suicidio afecta a las familias.", errors: ["crisis"] },
   { id: "cr-autolesion", text: "La autolesión es más común de lo que parece.", errors: ["crisis"] },
 
+  // ── nuevas reglas (loop iter 3) ──
+  { id: "ok-nino-educativo", text: "Un niño de 8 años puede sentir miedo a la separación; acompañarlo con calma ayuda." },
+  { id: "ok-medico", text: "Si tienes dudas sobre tu medicación, consúltalas con tu médico tratante." },
+  { id: "ok-estudios-sugieren", text: "Algunos estudios sugieren que dormir bien mejora el ánimo (Walker, 2017)." },
+  { id: "pa-de-0-a-5", text: "En 2 meses pasé de 0 a 5 pacientes nuevos por semana.", errors: ["no-promete-pacientes"] },
+  { id: "pa-llena-agenda", text: "Llena tu agenda de pacientes con este método.", errors: ["no-promete-pacientes"] },
+  { id: "pa-duplica", text: "Duplica tus pacientes con Instagram.", errors: ["no-promete-pacientes"] },
+  { id: "me-dosis", text: "Si te sientes mal, sube tu dosis de sertralina.", warnings: ["no-medicacion"] },
+  { id: "me-mg", text: "Muchas personas toman 50 mg para dormir mejor.", warnings: ["no-medicacion"] },
+  { id: "ev-estudios", text: "Los estudios demuestran que esta técnica funciona.", warnings: ["no-evidencia-sin-fuente"] },
+  { id: "ev-ciencia", text: "La ciencia demuestra que meditar cura la mente.", errors: ["no-promete"], warnings: ["no-evidencia-sin-fuente"] },
+  { id: "co-mejor", text: "Soy el mejor psicólogo de Santiago.", warnings: ["no-comparacion"] },
+  { id: "co-diferencia", text: "A diferencia de otros psicólogos, yo sí te escucho.", warnings: ["no-comparacion"] },
+
   // ── avisos (warning) ──
   { id: "wa-solo-hoy", text: "Últimos cupos, solo hoy.", warnings: ["no-presion"] },
   { id: "wa-descuento", text: "50% dcto en tu primera sesión.", warnings: ["no-presion"] },

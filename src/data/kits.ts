@@ -50,3 +50,18 @@ export const KIT_BY_ID: Record<KitId, BrandKit> = Object.fromEntries(BRAND_KITS.
 export function recommendKit(approach: Approach): BrandKit {
   return BRAND_KITS.find((k) => k.recommended_for.includes(approach)) ?? BRAND_KITS[0]!;
 }
+
+const rgb = (hex: string): [number, number, number] => {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
+
+/** Kit cerrado cuyo color de acento se parece más a los colores detectados en la web del psicólogo. */
+export function nearestKit(colors: string[]): BrandKit | null {
+  if (!colors.length) return null;
+  const dist = (a: string, b: string): number => {
+    const [x, y] = [rgb(a), rgb(b)];
+    return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
+  };
+  return BRAND_KITS.map((k) => ({ k, d: Math.min(...colors.map((c) => Math.min(dist(c, k.palette.accent), dist(c, k.palette.primary)))) })).sort((a, b) => a.d - b.d)[0]!.k;
+}

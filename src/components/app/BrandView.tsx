@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Globe, RotateCcw, ShieldCheck, Wand2 } from "lucide-react";
+import { Globe, Loader2, RotateCcw, ShieldCheck, Wand2 } from "lucide-react";
 import type { Approach, ClinicalDNA, TherapeuticTone } from "../../types/studio";
 import type { Studio } from "../../lib/store";
 import { makePost } from "../../lib/store";
-import { BRAND_KITS, KIT_BY_ID, recommendKit } from "../../data/kits";
+import { BRAND_KITS, KIT_BY_ID, nearestKit, recommendKit } from "../../data/kits";
 import { auditKit } from "../../lib/color";
 import { deriveDNA } from "../../lib/planner";
+import { DEFAULT_BOOKING_BASE, slugOf, slugify } from "../../lib/links";
 import { Btn, Card, FitThumb, inputCls, PageTitle } from "./ui";
 
 const APPROACHES: Approach[] = ["TCC", "Humanista", "Sistémico", "Psicoanálisis", "Somático / Mindfulness", "Integrativo"];
@@ -19,11 +20,38 @@ export function BrandView({ studio }: { studio: Studio }) {
   const { state } = studio;
   const dna = state.dna;
   const [url, setUrl] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [found, setFound] = useState<{ colors: string[]; real: boolean; msg: string } | null>(null);
   const set = <K extends keyof ClinicalDNA>(k: K, v: ClinicalDNA[K]) => studio.setDna({ ...dna, [k]: v });
   const text = (k: "name" | "handle" | "title" | "target_population" | "recurring_concern", label: string, max = 80) => (
     <div><label className="mb-1 block text-xs font-bold text-slate-600">{label}</label><input className={inputCls} value={dna[k]} onChange={(e) => set(k, e.target.value.slice(0, max))} /></div>
   );
-  const analyze = () => { const d = deriveDNA(url, dna); studio.setDna(d); studio.setKit(recommendKit(d.approach).kit_id); };
+  /** Lee la portada pública de la web (servidor). Sin servidor o si falla, cae a una deducción simulada. */
+  const analyze = async () => {
+    setBusy(true);
+    setFound(null);
+    try {
+      const res = await fetch("/api/brand", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url }) });
+      const ct = res.headers.get("content-type") ?? "";
+      if (!ct.includes("json")) throw new Error("sin servidor");
+      const data = (await res.json()) as { site?: { name: string; description: string; colors: string[]; themeColor: string | null; approach: string | null; population: string | null }; host?: string; error?: string };
+      if (!res.ok || !data.site) { setFound({ colors: [], real: false, msg: data.error ?? "No se pudo leer esa web." }); return; }
+      const site = data.site;
+      const approach = (APPROACHES as string[]).includes(site.approach ?? "") ? (site.approach as Approach) : dna.approach;
+      const colors = [...(site.themeColor ? [site.themeColor] : []), ...site.colors];
+      const d: ClinicalDNA = { ...dna, website: data.host, name: site.name ? `Ps. ${site.name.replace(/^ps\.?\s+/i, "")}` : dna.name, slug: slugify(site.name || dna.name), approach, target_population: site.population ?? dna.target_population };
+      studio.setDna(d);
+      studio.setKit((nearestKit(colors) ?? recommendKit(approach)).kit_id);
+      setFound({ colors, real: true, msg: `Leímos la portada de ${data.host}. Revisa los datos: son una propuesta, no un diagnóstico de tu marca.` });
+    } catch {
+      const d = deriveDNA(url, dna);
+      studio.setDna({ ...d, slug: slugify(d.name) });
+      studio.setKit(recommendKit(d.approach).kit_id);
+      setFound({ colors: [], real: false, msg: "Modo demo (sin servidor): deducción simulada desde la URL. En el sitio publicado se lee la web de verdad." });
+    } finally {
+      setBusy(false);
+    }
+  };
   const rec = recommendKit(dna.approach);
   const sample = makePost("frase-validacion", state.kit_id, { frase: "Así se verán tus publicaciones", apoyo: dna.name });
   return (
@@ -33,11 +61,17 @@ export function BrandView({ studio }: { studio: Studio }) {
         <div className="space-y-5">
           <Card>
             <h2 className="mb-1 flex items-center gap-2 text-sm font-extrabold"><Wand2 size={16} /> Analizar mi sitio o Instagram</h2>
-            <p className="mb-3 text-xs text-slate-500">Pega tu URL y armamos tu ADN. En esta demo el análisis es simulado: no sale de tu navegador.</p>
+            <p className="mb-3 text-xs text-slate-500">Pega tu URL y armamos tu ADN. Leemos solo la portada pública (nombre, descripción, colores y palabras clave).</p>
             <div className="flex gap-2">
-              <div className="relative flex-1"><Globe size={15} className="absolute left-3 top-3.5 text-slate-400" /><input className={`${inputCls} !pl-9`} placeholder="tupsicologa.cl" value={url} onChange={(e) => setUrl(e.target.value.slice(0, 80))} onKeyDown={(e) => e.key === "Enter" && url.trim().length > 2 && analyze()} /></div>
-              <Btn disabled={url.trim().length < 3} onClick={analyze}>Analizar</Btn>
+              <div className="relative flex-1"><Globe size={15} className="absolute left-3 top-3.5 text-slate-400" /><input className={`${inputCls} !pl-9`} placeholder="tupsicologa.cl" value={url} onChange={(e) => setUrl(e.target.value.slice(0, 80))} onKeyDown={(e) => e.key === "Enter" && url.trim().length > 2 && !busy && void analyze()} /></div>
+              <Btn disabled={url.trim().length < 3 || busy} onClick={() => void analyze()}>{busy ? <Loader2 size={15} className="animate-spin" /> : null}Analizar</Btn>
             </div>
+            {found ? (
+              <div className="mt-3 space-y-2">
+                <p className={`rounded-2xl px-3 py-2 text-xs ${found.real ? "bg-emerald-50 text-emerald-900" : "bg-amber-50 text-amber-900"}`}>{found.msg}</p>
+                {found.colors.length > 0 && <div className="flex items-center gap-2 text-xs text-slate-600">Colores de tu web: {found.colors.map((c) => <i key={c} title={c} className="h-5 w-5 rounded-full ring-2 ring-white shadow" style={{ background: c }} />)}<span>→ kit más cercano: <b>{KIT_BY_ID[state.kit_id].name}</b></span></div>}
+              </div>
+            ) : null}
           </Card>
 
           <Card className="space-y-4">
@@ -47,6 +81,10 @@ export function BrandView({ studio }: { studio: Studio }) {
                 <label className="mb-1 block text-xs font-bold text-slate-600">Enfoque clínico</label>
                 <select className={inputCls} value={dna.approach} onChange={(e) => set("approach", e.target.value as Approach)}>{APPROACHES.map((a) => <option key={a}>{a}</option>)}</select>
               </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><label className="mb-1 block text-xs font-bold text-slate-600">Tu página de reservas: /p/…</label><input className={inputCls} value={dna.slug ?? slugOf(dna)} onChange={(e) => set("slug", slugify(e.target.value))} /></div>
+              <div><label className="mb-1 block text-xs font-bold text-slate-600">Dominio de tu agenda</label><input className={inputCls} value={dna.bookingBase ?? DEFAULT_BOOKING_BASE} onChange={(e) => set("bookingBase", e.target.value.slice(0, 80))} /></div>
             </div>
             {text("target_population", "A quién te diriges")}
             {text("recurring_concern", "Motivo de consulta más frecuente")}

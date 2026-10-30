@@ -27,6 +27,10 @@ export type TherapeuticTone = "calido" | "estructurado" | "reflexivo";
 export interface ClinicalDNA {
   name: string;
   website?: string;
+  /** Identificador público para la página de reservas: `/p/{slug}` (se une con Connectv5). */
+  slug?: string;
+  /** Dominio de la agenda donde viven las reservas. */
+  bookingBase?: string;
   handle: string;
   title: string;
   approach: Approach;
