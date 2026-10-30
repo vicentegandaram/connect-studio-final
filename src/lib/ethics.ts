@@ -15,12 +15,16 @@ export interface EthicsPass {
 export interface EthicsReport {
   issues: EthicsIssue[];
   passed: EthicsPass[];
+  /** Ids de todas las reglas que fallaron (incluye «crisis», que no está en `passed`). */
+  failed: string[];
 }
 
 interface Rule {
   id: string;
   passLabel: string;
   re: RegExp;
+  /** Frases que niegan la promesa («no es una cura», «sin prometer»): se quitan antes de evaluar. */
+  strip?: RegExp;
   severity: Severity;
   message: string;
 }
@@ -30,28 +34,29 @@ const RULES: Rule[] = [
   {
     id: "no-diagnostica",
     passLabel: "No diagnostica: habla de experiencias comunes, no de trastornos.",
-    re: /\b(tienes|padeces|sufres de|eres)\s+(un[a]?\s+)?(depresi[oó]n|ansiedad|trastorno|bipolar|tdah|toc|tept|autis\w*|borderline)/i,
+    re: /(?<!\bsi\s)\b(tienes|padeces|sufres de|eres)\s+(un[a]?\s+)?(depresi[oó]n|ansiedad|trastorno|bipolar|tdah|toc|tept|autis\w*|borderline)/i,
     severity: "error",
     message: "Parece un diagnóstico directo. Usa lenguaje psicoeducativo («puede ser señal de…»).",
   },
   {
     id: "no-promete",
     passLabel: "No promete curas ni resultados.",
-    re: /\b(te vas a curar|cura|curar\w*|sanar\w*|garantiz\w+|100\s?%|resultados?\s+(asegurad|garantizad)\w*|para siempre)\b/i,
+    re: /(\b(te vas a curar|cura|curar\w*|sanar\w*|garantiz\w+|resultados?\s+(asegurad|garantizad)\w*|para siempre|(de\s+)?(forma|manera)\s+definitiva|definitivamente)\b|100\s?%|\b(supera|elimina|resuelve|acaba con|olv[ií]date de)\w*\b[^.!?]{0,40}\ben\s+\d+\s+(d[ií]as|semanas|sesiones|meses))/i,
+    strip: /\b(no|sin)\s+(es\s+|son\s+)?(una\s+)?(prometer|promet\w+|garantiz\w+|cura\w*|curar\w*)(\s+m[aá]gica)?/gi,
     severity: "error",
     message: "Promete curas o resultados. No se puede garantizar un resultado terapéutico.",
   },
   {
     id: "no-reemplaza",
     passLabel: "No sugiere reemplazar la atención profesional.",
-    re: /(no necesitas\s+(un[a]?\s+)?(psic\w+|terapia)|en vez de ir al psic\w+|en lugar de (ir a )?terapia)/i,
+    re: /(no necesitas\s+(un[a]?\s+)?(psic[a-záéíóúñ]+|terapia)|en vez de ir al psic[a-záéíóúñ]+|en lugar de (ir a )?terapia)/i,
     severity: "error",
     message: "Sugiere reemplazar la atención profesional.",
   },
   {
     id: "no-testimonios",
     passLabel: "No usa testimonios ni casos de pacientes.",
-    re: /\b(mi paciente|mis pacientes|testimonios?|caso real|me (dijo|dijeron) (un|una) paciente)\b/i,
+    re: /\b(mi paciente|mis pacientes|(una?|esta|este)\s+pacientes?\s+(de|m[ií]o|m[ií]a)|testimonios?|caso real|me (dijo|dijeron) (un|una) paciente)\b/i,
     severity: "error",
     message: "Menciona pacientes o testimonios: riesgo de confidencialidad y publicidad indebida.",
   },
@@ -61,6 +66,13 @@ const RULES: Rule[] = [
     re: /(\b(urgente|[uú]ltim[oa]s?\s+cupos?|solo hoy|no esperes m[aá]s|oferta|promo\w*)\b|\d+\s?%\s?(dcto|descuento|off))/i,
     severity: "warning",
     message: "Tono comercial o de urgencia. Para servicios de salud mental, mejor informar y dejar decidir.",
+  },
+  {
+    id: "no-hashtag-dx",
+    passLabel: "Sin hashtags que etiqueten diagnósticos.",
+    re: /#(depresi[oó]n|bipolar|tdah|suicid\w*|trastorno\w*)/i,
+    severity: "warning",
+    message: "Hashtag que etiqueta un diagnóstico; prefiere etiquetas de bienestar (#saludmental, #autocuidado).",
   },
   {
     id: "no-fisiologia",
@@ -97,7 +109,7 @@ export function reviewTexts(texts: Record<string, string>): EthicsReport {
   const failed = new Set<string>();
   for (const [where, text] of Object.entries(texts)) {
     for (const rule of RULES) {
-      const m = text.match(rule.re);
+      const m = (rule.strip ? text.replace(rule.strip, " ") : text).match(rule.re);
       if (m) {
         issues.push({ severity: rule.severity, where, excerpt: m[0], message: rule.message });
         failed.add(rule.id);
@@ -115,7 +127,7 @@ export function reviewTexts(texts: Record<string, string>): EthicsReport {
     failed.add("crisis");
   }
   const passed = RULES.filter((r) => !failed.has(r.id)).map((r) => ({ id: r.id, label: r.passLabel }));
-  return { issues, passed };
+  return { issues, passed, failed: [...failed] };
 }
 
 export function reviewPost(post: Post): EthicsReport {

@@ -8,6 +8,7 @@ import { analyzeFeed, categoryOf, CATEGORY_LABEL } from "../../lib/harmony";
 import { Thumb } from "./SlideSurface";
 import { generateCaption } from "../../lib/copy";
 import type { PostStatus } from "../../types/studio";
+import { canMove, STATUS_LABEL } from "../../lib/workflow";
 
 type Tab = "contenido" | "etica";
 
@@ -36,14 +37,14 @@ export function RightPanel({ studio, report, onAI, onTeleprompter }: Props) {
         {tabBtn("etica", "Ética", errors ? <span className="rounded-full bg-rose-500 px-1.5 text-[10px] text-white">{errors}</span> : report.issues.length ? <span className="rounded-full bg-amber-500 px-1.5 text-[10px] text-slate-950">{report.issues.length}</span> : <CheckCircle2 size={13} className="text-emerald-600" />)}
       </div>
       <div className="flex-1 overflow-y-auto p-4">
-        {tab === "contenido" ? <ContentForm studio={studio} onAI={onAI} onTeleprompter={onTeleprompter} /> : null}
+        {tab === "contenido" ? <ContentForm studio={studio} report={report} onAI={onAI} onTeleprompter={onTeleprompter} /> : null}
         {tab === "etica" ? <EthicsPanel report={report} /> : null}
       </div>
     </aside>
   );
 }
 
-function ContentForm({ studio, onAI, onTeleprompter }: { studio: Studio; onAI: () => void; onTeleprompter: () => void }) {
+function ContentForm({ studio, report, onAI, onTeleprompter }: { studio: Studio; report: EthicsReport; onAI: () => void; onTeleprompter: () => void }) {
   const { active } = studio;
   const def = FORMAT_BY_ID[active.format];
   const isScript = active.format === "guion-reel";
@@ -98,8 +99,8 @@ function ContentForm({ studio, onAI, onTeleprompter }: { studio: Studio; onAI: (
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-700">Estado</label>
-            <select value={active.status ?? "borrador"} onChange={(e) => studio.patchActive({ status: e.target.value as PostStatus })} className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 outline-none focus:border-brand">
-              <option value="borrador">Borrador</option><option value="programado">Programado</option><option value="publicado">Publicado</option>
+            <select value={active.status ?? "borrador"} onChange={(e) => { const why = studio.moveStatus(active.id, e.target.value as PostStatus, report); if (why) alert(why); }} className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 outline-none focus:border-brand">
+              {(Object.keys(STATUS_LABEL) as PostStatus[]).map((st) => <option key={st} value={st} disabled={!canMove(active, st, report).ok && st !== (active.status ?? "borrador")}>{STATUS_LABEL[st]}</option>)}
             </select>
           </div>
           <div>
@@ -108,6 +109,7 @@ function ContentForm({ studio, onAI, onTeleprompter }: { studio: Studio; onAI: (
           </div>
         </div>
       </div>
+      {(active.status ?? "borrador") === "borrador" ? <p className="text-[11px] leading-relaxed text-slate-500">Para programar o publicar, el psicólogo debe aprobar la pieza (Estado → «Aprobado por el psicólogo») y la revisión ética debe estar limpia. Si editas después de aprobar, vuelve a borrador.</p> : null}
       {isScript ? (
         <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
           <p className={`text-xs ${total >= 30 && total <= 60 ? "text-emerald-600" : "text-amber-800"}`}>Duración estimada: ~{total}s {total > 60 ? "(largo para un reel: apunta a 30–60 s)" : total < 30 ? "(corto: puedes profundizar)" : "(ideal)"}</p>

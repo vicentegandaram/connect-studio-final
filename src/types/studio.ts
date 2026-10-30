@@ -41,7 +41,7 @@ export type FormatId =
 /** Diseño genérico de las láminas de una sola pieza (los 5 formatos originales tienen plantilla propia). */
 export type Layout = "quote" | "stat" | "text" | "list" | "faq" | "pair";
 export type Pillar = "psicoeducacion" | "desmitificacion" | "sintomas";
-export type PostStatus = "borrador" | "programado" | "publicado";
+export type PostStatus = "borrador" | "aprobado" | "programado" | "publicado";
 export type RatioId = "story" | "feed-square" | "feed-portrait";
 /** Categoría usada por el Harmonizer para alternar el ritmo del feed. */
 export type FeedCategory = "educativo" | "emocional" | "conversion" | "video";
@@ -131,6 +131,8 @@ export interface Post {
   /** Id de la idea del plan semanal de la que nació. */
   planId?: string;
   status?: PostStatus;
+  /** Cuándo el psicólogo aprobó el contenido; se borra si se edita. */
+  approvedAt?: string;
   /** YYYY-MM-DD */
   scheduledAt?: string;
 }

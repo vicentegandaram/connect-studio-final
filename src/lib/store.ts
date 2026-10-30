@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ClinicalDNA, Dimensions, Fields, FormatId, KitId, Layer, Pillar, Post, PostStatus, RatioId, SlideExtras, Stroke } from "../types/studio";
 import { FORMAT_BY_ID, FORMATS, fillVariant } from "../data/formats";
 import { KIT_BY_ID, recommendKit } from "../data/kits";
+import { invalidateApproval, moveTo } from "./workflow";
+import type { EthicsReport } from "./ethics";
 export type { Pillar, PostStatus };
 
 export const DIMENSIONS: Record<RatioId, Dimensions> = {
@@ -107,7 +109,19 @@ export function useStudio() {
         const post = { ...makePost(format, s.kit_id, fields ?? nextVariant(format, s.posts, s.dna.recurring_concern)), ...meta };
         return { ...s, posts: [post, ...s.posts], activeId: post.id, slide: 0 };
       }),
-    patchActive: (patch: Partial<Pick<Post, "caption" | "status" | "scheduledAt">>) => patchPost(active.id, (p) => ({ ...p, ...patch })),
+    patchActive: (patch: Partial<Pick<Post, "caption" | "status" | "scheduledAt" | "approvedAt">>) =>
+      patchPost(active.id, (p) => {
+        const next = { ...p, ...patch };
+        return "caption" in patch && patch.caption !== p.caption ? invalidateApproval(next) : next;
+      }),
+    /** Cambia de estado respetando el flujo de aprobación. Devuelve el motivo si no se pudo. */
+    moveStatus: (id: string, to: PostStatus, report: EthicsReport): string | null => {
+      const target = state.posts.find((p) => p.id === id);
+      if (!target) return "No se encontró la pieza.";
+      const res = moveTo(target, to, report);
+      if (res.gate.ok) patchPost(id, () => res.post);
+      return res.gate.ok ? null : res.gate.reason ?? "No permitido.";
+    },
     nextRound: () => setState((s) => ({ ...s, planRound: s.planRound + 1 })),
     duplicate: () => setState((s) => {
       const copy: Post = { ...structuredClone(active), id: uid() };
@@ -129,7 +143,7 @@ export function useStudio() {
         return { ...s, posts };
       }),
     setRatio: (ratio: RatioId) => patchPost(active.id, (p) => ({ ...p, ratio })),
-    setFields: (fields: Fields) => patchPost(active.id, (p) => ({ ...p, fields })),
+    setFields: (fields: Fields) => patchPost(active.id, (p) => invalidateApproval({ ...p, fields })),
     addLayer: (layer: Layer) => patchExtras((e) => ({ ...e, layers: [...e.layers, layer] })),
     updateLayer: (id: string, patch: Partial<Layer>) => patchExtras((e) => ({ ...e, layers: e.layers.map((l) => (l.id === id ? ({ ...l, ...patch } as Layer) : l)) })),
     removeLayer: (id: string) => patchExtras((e) => ({ ...e, layers: e.layers.filter((l) => l.id !== id) })),

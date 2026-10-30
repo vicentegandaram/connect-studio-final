@@ -22,7 +22,7 @@ export function HomeView({ studio, onOpen }: { studio: Studio; onOpen: () => voi
   const build = (i: PlanIdea) => {
     const existing = made(i);
     if (existing) studio.select(existing.id);
-    else studio.create(i.format as FormatId, fieldsForTopic(i.format, i.topic, state.dna, state.posts), { topic: i.topic, pillar: i.pillar, planId: i.id, status: "programado", scheduledAt: nextWeekday(i.weekday) });
+    else studio.create(i.format as FormatId, fieldsForTopic(i.format, i.topic, state.dna, state.posts), { topic: i.topic, pillar: i.pillar, planId: i.id, status: "borrador", scheduledAt: nextWeekday(i.weekday) });
     onOpen();
   };
   const first = state.dna.name.replace(/^Ps\.\s*/i, "").split(" ")[0];

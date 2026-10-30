@@ -49,4 +49,4 @@ export function FitThumb({ post, studio, slide = 0, className = "" }: { post: Po
   );
 }
 
-export const STATUS_COLOR = { borrador: "#64748b", programado: "#b45309", publicado: "#15803d" } as const;
+export const STATUS_COLOR = { borrador: "#64748b", aprobado: "#1d4ed8", programado: "#b45309", publicado: "#15803d" } as const;

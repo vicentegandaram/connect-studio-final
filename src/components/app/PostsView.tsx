@@ -2,6 +2,7 @@ import { CalendarDays, CheckCircle2, Copy, Pencil, Trash2 } from "lucide-react";
 import type { Studio } from "../../lib/store";
 import { FORMAT_BY_ID } from "../../data/formats";
 import { FeedHarmonizer } from "../studio/RightPanel";
+import { reviewPost } from "../../lib/ethics";
 import { Card, Chip, FitThumb, PageTitle, STATUS_COLOR } from "./ui";
 
 export function PostsView({ studio, onOpen }: { studio: Studio; onOpen: (id: string) => void }) {
@@ -24,7 +25,7 @@ export function PostsView({ studio, onOpen }: { studio: Studio; onOpen: (id: str
                 <div className="mt-2 flex gap-1.5">
                   <button title="Editar" aria-label="Editar" onClick={() => onOpen(p.id)} className="grid h-9 flex-1 place-items-center rounded-xl bg-soft text-brand"><Pencil size={15} /></button>
                   <button title="Duplicar" aria-label="Duplicar" onClick={() => { studio.select(p.id); studio.duplicate(); }} className="grid h-9 flex-1 place-items-center rounded-xl border border-slate-200"><Copy size={15} /></button>
-                  <button title="Marcar publicado" aria-label="Marcar publicado" onClick={() => { studio.select(p.id); studio.patchActive({ status: "publicado" }); }} className="grid h-9 flex-1 place-items-center rounded-xl border border-slate-200 text-emerald-700"><CheckCircle2 size={15} /></button>
+                  <button title="Marcar publicado" aria-label="Marcar publicado" onClick={() => { const why = studio.moveStatus(p.id, "publicado", reviewPost(p)); if (why) alert(why); }} className="grid h-9 flex-1 place-items-center rounded-xl border border-slate-200 text-emerald-700"><CheckCircle2 size={15} /></button>
                   <button title="Borrar" aria-label="Borrar" disabled={posts.length <= 1} onClick={() => confirm("¿Borrar este post?") && studio.remove(p.id)} className="grid h-9 flex-1 place-items-center rounded-xl border border-slate-200 text-rose-600 disabled:opacity-30"><Trash2 size={15} /></button>
                 </div>
               </div>
